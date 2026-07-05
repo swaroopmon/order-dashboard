@@ -14,11 +14,13 @@ class OrderStatusUpdate(BaseModel):
     status: Literal["Pending", "Processing", "Completed"]
 
 
+
 class OrderResponse(BaseModel):
     id: int
     customer_name: str
     amount: Decimal
     status: str
     created_at: datetime
+    amount_usd: float | None = None
 
     model_config = ConfigDict(from_attributes=True)

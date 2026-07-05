@@ -1,0 +1,73 @@
+services:
+
+  postgres:
+    image: postgres:16
+
+    container_name: order-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orderdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: order-backend
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - ./backend/.env.docker
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./backend:/app
+
+    command: >
+      sh -c "
+      alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: order-frontend
+
+    depends_on:
+      - backend
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000
+
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+volumes:
+  postgres_data:
+  frontend_node_modules:
