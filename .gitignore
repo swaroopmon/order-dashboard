@@ -8,7 +8,6 @@ backend/**/__pycache__/
 
 # Environment files
 backend/.env
-backend/.env.docker
 
 # Python cache
 *.py[cod]
